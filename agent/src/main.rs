@@ -25,15 +25,13 @@ async fn main() {
         if let Ok(sockets) = get_sockets_info(af_flags, proto_flags) {
             for socket in sockets {
                 if let ProtocolSocketInfo::Tcp(tcp_info) = socket.protocol_socket_info {
-                    if let Some(pid) = tcp_info.associated_pid {
-                        let remote_addr = tcp_info.remote_address;
-                        
+                    if let Some(&pid) = socket.associated_pids.first() {
                         if let Some(process) = sys.process(Pid::from(pid as usize)) {
                             let event = ConnectionEvent {
                                 process_name: process.name().to_string(),
                                 pid,
-                                remote_ip: remote_addr.ip().to_string(),
-                                remote_port: remote_addr.port(),
+                                remote_ip: tcp_info.remote_addr.to_string(),
+                                remote_port: tcp_info.remote_port,
                             };
                             
                             if let Ok(json) = serde_json::to_string(&event) {
